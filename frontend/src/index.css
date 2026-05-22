@@ -21,3 +21,33 @@ code {
   color: grey;
   text-decoration: none;
 }
+
+#SupportHero {
+  color: white;
+  background-color: rgb(26,126,209);
+  
+}
+
+#SupportWrapper {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 200px
+}
+
+#SupportHero a{
+  color: white;
+  margin-right: 15px;
+}
+
+#SupportHero input {
+  padding: 20px 50px;
+  width:80%;
+  font-size: 20px;
+  border: none;
+  border-radius: 10px;
+}
+
+#SupportContent {
+  margin: 50px 200px;
+  padding: 30px;
+}
