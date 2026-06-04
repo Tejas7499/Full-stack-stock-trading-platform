@@ -1,7 +1,9 @@
 import React, { useState, useContext } from "react";
-import {Tooltip, Grow} from "@mui/material"
+import {Tooltip, Grow} from "@mui/material";
 import { watchlist } from "../data/data";
-import {BarChartOutlined, KeyboardArrowDown, KeyboardArrowUp, MoreHoriz} from "@mui/icons-material"
+import {BarChartOutlined, KeyboardArrowDown, KeyboardArrowUp, MoreHoriz} from "@mui/icons-material";
+import GeneralContext from "./GeneralContext"; 
+import axios from "axios";
 
 const WatchList = () => {
 
@@ -52,10 +54,17 @@ const WatchlistItem = ({stock}) => {
 }
 
 const WatchListActions = ({uid}) => {
+
+  const generalContext = useContext(GeneralContext);
+
+  const handleBuyClick = () => {
+    generalContext.openBuyWindow(uid);
+  };
+
   return(
     <span className="actions">
       <span>
-        <Tooltip title="Buy (B)" placement="top" arrow TransitionComponent={Grow}>
+        <Tooltip title="Buy (B)" placement="top" arrow TransitionComponent={Grow} onClick={handleBuyClick}>
           <button className="buy">Buy</button>
         </Tooltip>
         <Tooltip title="Sell (S)" placement="top" arrow TransitionComponent={Grow}>

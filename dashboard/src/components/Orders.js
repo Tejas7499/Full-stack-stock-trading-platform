@@ -13,7 +13,7 @@ const Menu = () => {
           <li>
               <p>
                 Dashboard
-              </p>
+              </p> 
           </li>
           <li>
               <p>
