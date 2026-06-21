@@ -51,6 +51,12 @@ app.post("/newOrder", async (req, res) => {
     res.send("Order saved !");
 });
 
+app.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok", db: mongoose.connection.readyState === 1 ? "connected" : "disconnected" });
+});
+
+module.exports = app;
+
 
 mongoose.connect(url)
 .then(() => {

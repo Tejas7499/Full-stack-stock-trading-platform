@@ -1,0 +1,188 @@
+name: Trading Platform — CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main          
+  pull_request:
+    branches:
+      - main  
+
+
+env:
+  AWS_REGION: ap-south-1            
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest         
+ 
+    steps:
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+ 
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci                
+ 
+  
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          NODE_ENV: test
+          MONGODB_URI: ${{ secrets.MONGODB_TEST_URI }}
+ 
+     
+      - name: Lint check
+        working-directory: ./backend
+        run: npm run lint --if-present   
+ 
+ 
+  build-and-push:
+    name: Build & Push to ECR
+    runs-on: ubuntu-latest
+    needs: test                   
+ 
+
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+ 
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tag }}
+ 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+ 
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+ 
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+ 
+     
+      - name: Generate image tag
+        id: meta
+        run: echo "tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+ 
+     
+      - name: Build & push backend image
+        run: |
+          IMAGE_URI=${{ env.ECR_REGISTRY }}/trading/backend
+ 
+          docker build \
+            --cache-from $IMAGE_URI:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $IMAGE_URI:${{ steps.meta.outputs.tag }} \
+            -t $IMAGE_URI:latest \
+            ./backend
+ 
+          docker push $IMAGE_URI:${{ steps.meta.outputs.tag }}
+          docker push $IMAGE_URI:latest
+ 
+      
+      - name: Build & push frontend image
+        run: |
+          IMAGE_URI=${{ env.ECR_REGISTRY }}/trading/frontend
+ 
+          docker build \
+            --cache-from $IMAGE_URI:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $IMAGE_URI:${{ steps.meta.outputs.tag }} \
+            -t $IMAGE_URI:latest \
+            ./frontend
+ 
+          docker push $IMAGE_URI:${{ steps.meta.outputs.tag }}
+          docker push $IMAGE_URI:latest
+ 
+      
+      - name: Build & push dashboard image
+        run: |
+          IMAGE_URI=${{ env.ECR_REGISTRY }}/trading/dashboard
+ 
+          docker build \
+            --cache-from $IMAGE_URI:latest \
+            --build-arg BUILDKIT_INLINE_CACHE=1 \
+            -t $IMAGE_URI:${{ steps.meta.outputs.tag }} \
+            -t $IMAGE_URI:latest \
+            ./dashboard
+ 
+          docker push $IMAGE_URI:${{ steps.meta.outputs.tag }}
+          docker push $IMAGE_URI:latest
+ 
+ 
+##deploy:
+  ##  name: Deploy to EKS
+    ##runs-on: ubuntu-latest
+    ##needs: build-and-push          
+ 
+    ##steps:
+      ##- name: Checkout code
+        ##uses: actions/checkout@v4
+ 
+      ##- name: Configure AWS credentials
+        ##uses: aws-actions/configure-aws-credentials@v4
+        ##with:
+          ##aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          ##aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ##aws-region: ${{ env.AWS_REGION }}
+ 
+      
+      ##- name: Configure kubectl for EKS
+        ##run: |
+          ##aws eks update-kubeconfig \
+            ##--region ${{ env.AWS_REGION }} \
+            ##--name trading-platform-cluster    # Change this to your EKS cluster name
+ 
+      
+      ##- name: Deploy backend to EKS
+        ##run: |
+          ##kubectl set image deployment/backend \
+            ##backend=${{ env.ECR_REGISTRY }}/trading/backend:${{ needs.build-and-push.outputs.image-tag }} \
+            ##--namespace=trading
+ 
+      ##- name: Deploy frontend to EKS
+        ##run: |
+          ##kubectl set image deployment/frontend \
+            ##frontend=${{ env.ECR_REGISTRY }}/trading/frontend:${{ needs.build-and-push.outputs.image-tag }} \
+            ##--namespace=trading
+ 
+      ##- name: Deploy dashboard to EKS
+        ##run: |
+          ##kubectl set image deployment/dashboard \
+            ##dashboard=${{ env.ECR_REGISTRY }}/trading/dashboard:${{ needs.build-and-push.outputs.image-tag }} \
+            ##--namespace=trading
+ 
+      
+      ##- name: Verify deployments are healthy
+        ##run: |
+          ##kubectl rollout status deployment/backend --namespace=trading --timeout=120s
+          ##kubectl rollout status deployment/frontend --namespace=trading --timeout=120s
+          ##kubectl rollout status deployment/dashboard --namespace=trading --timeout=120s
+ 
+      
+      ##- name: Notify deployment success
+        ##if: success()
+        ##run: |
+          ##echo "✅ Deployment successful!"
+          ##echo "Commit: ${{ github.sha }}"
+          ##echo "Deployed by: ${{ github.actor }}"
+          # Add webhook call here for Slack/Discord notifications 

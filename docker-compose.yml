@@ -1,0 +1,104 @@
+
+
+version: "3.9"
+
+
+services:
+
+  
+  mongo:
+    image: mongo:7.0                   
+    container_name: trading_mongo
+    restart: unless-stopped            
+    
+    ports:
+      - "27017:27017"                  
+    
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: trading_db
+    
+    volumes:
+      
+      - mongo_data:/data/db
+    
+    networks:
+      - trading_network                 
+  backend:
+    build:
+      context: ./backend               
+      dockerfile: Dockerfile
+    
+    container_name: trading_backend
+    restart: unless-stopped
+    
+    ports:
+      - "5000:5000"                    
+    
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      
+      
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/trading_db?authSource=admin
+      
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: http://localhost:3000
+    
+    depends_on:
+      - mongo                          
+    
+    volumes:
+
+      - ./backend:/app
+      
+      - /app/node_modules
+    
+    networks:
+      - trading_network
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    
+    container_name: trading_frontend
+    restart: unless-stopped
+    
+    ports:
+      - "3000:80"                      
+    
+    depends_on:
+      - backend                       
+    
+    networks:
+      - trading_network
+
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    
+    container_name: trading_dashboard
+    restart: unless-stopped
+    
+    ports:
+      - "3001:80"                     
+    
+    depends_on:
+      - backend
+    
+    networks:
+      - trading_network
+
+
+networks:
+  trading_network:
+    driver: bridge                     
+
+
+volumes:
+  mongo_data:
