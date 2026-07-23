@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: trading-platform
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: order-service
+
+  template:
+    metadata:
+      labels:
+        app: order-service
+
+    spec:
+      containers:
+        - name: order-service
+
+          image: fullstackstocktradingplatform-order-service:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 3003
+
+          env:
+            - name: PORT
+              value: "3003"
+
+            - name: MONGO_URI
+              value: mongodb://mongo:27017/order-service
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: trading-secrets
+                  key: JWT_SECRET
+
+            - name: STOCK_SERVICE_URL
+              value: http://stock-service:3004
+
+            - name: PORTFOLIO_SERVICE_URL
+              value: http://portfolio-service:3002
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: trading-platform
+
+spec:
+  selector:
+    app: order-service
+
+  ports:
+    - port: 3003
+      targetPort: 3003
+
+  type: ClusterIP

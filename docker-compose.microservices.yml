@@ -1,5 +1,3 @@
-
-
 services:
   api-gateway:
     build: ./backend/services/api-gateway
@@ -14,6 +12,9 @@ services:
       - STOCK_SERVICE=http://stock-service:3004
     depends_on:
       - auth-service
+      - portfolio-service
+      - order-service
+      - stock-service
 
   auth-service:
     build: ./backend/services/auth-service
@@ -24,6 +25,44 @@ services:
       - PORT=3001
       - MONGO_URI=mongodb://mongo:27017/trading
       - JWT_SECRET=your_secret_key
+    depends_on:
+      - mongo
+
+  portfolio-service:
+    build: ./backend/services/portfolio-service
+    container_name: portfolio-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGO_URI=mongodb://mongo:27017/trading
+    depends_on:
+      - mongo
+
+  order-service:
+    build: ./backend/services/order-service
+    container_name: order-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGO_URI=mongodb://mongo:27017/trading
+      - JWT_SECRET=your_secret_key
+      - PORTFOLIO_SERVICE_URL=http://portfolio-service:3002
+      - STOCK_SERVICE_URL=http://stock-service:3004
+    depends_on:
+      - mongo
+      - portfolio-service
+      - stock-service
+
+  stock-service:
+    build: ./backend/services/stock-service
+    container_name: stock-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - MONGO_URI=mongodb://mongo:27017/stock-service
     depends_on:
       - mongo
 

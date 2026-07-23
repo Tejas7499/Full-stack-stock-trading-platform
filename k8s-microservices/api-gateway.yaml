@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: trading-platform
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: api-gateway
+
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+
+    spec:
+      containers:
+        - name: api-gateway
+
+          image: fullstackstocktradingplatform-api-gateway:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: PORT
+              value: "8080"
+
+            - name: AUTH_SERVICE
+              value: http://auth-service:3001
+
+            - name: ORDER_SERVICE
+              value: http://order-service:3003
+
+            - name: PORTFOLIO_SERVICE
+              value: http://portfolio-service:3002
+
+            - name: STOCK_SERVICE
+              value: http://stock-service:3004
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: trading-platform
+
+spec:
+  selector:
+    app: api-gateway
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+  type: ClusterIP

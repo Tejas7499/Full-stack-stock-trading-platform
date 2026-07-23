@@ -1,3 +1,7 @@
+const User = require("../models/UserModel");
+const { createSecretToken } = require("../utils/SecretToken");
+const bcrypt = require("bcryptjs");
+
 module.exports.Signup = async (req, res) => {
   try {
     const { email, password, username } = req.body;
@@ -36,7 +40,9 @@ module.exports.Signup = async (req, res) => {
       user: newUser,
     });
   } catch (error) {
-    console.error("SIGNUP ERROR:", error.message);
+    console.error("========== SIGNUP ERROR ==========");
+    console.error(error);
+    console.error(error.stack);
 
     return res.status(500).json({
       message: error.message,

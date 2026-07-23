@@ -1,1 +1,6 @@
+node_modules/
 .env
+dist/
+build/
+
+k8s-microservices/secret.yaml

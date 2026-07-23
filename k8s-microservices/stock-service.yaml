@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stock-service
+  namespace: trading-platform
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: stock-service
+
+  template:
+    metadata:
+      labels:
+        app: stock-service
+
+    spec:
+      containers:
+        - name: stock-service
+
+          image: fullstackstocktradingplatform-stock-service:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 3004
+
+          env:
+            - name: PORT
+              value: "3004"
+
+            - name: MONGO_URI
+              value: mongodb://mongo:27017/stock-service
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stock-service
+  namespace: trading-platform
+
+spec:
+  selector:
+    app: stock-service
+
+  ports:
+    - port: 3004
+      targetPort: 3004
+
+  type: ClusterIP

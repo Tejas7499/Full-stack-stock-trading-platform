@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trading-config
+  namespace: trading-platform
+data:
+  AUTH_SERVICE: http://auth-service:3001
+  PORTFOLIO_SERVICE: http://portfolio-service:3002
+  ORDER_SERVICE: http://order-service:3003
+  STOCK_SERVICE: http://stock-service:3004
+
+  PORTFOLIO_SERVICE_URL: http://portfolio-service:3002
+  STOCK_SERVICE_URL: http://stock-service:3004
