@@ -22,7 +22,11 @@ const createStock = async (req, res) => {
       });
     }
 
-    const existingStock = await StockModel.findOne({ symbol });
+    const normalizedSymbol = symbol.trim().toUpperCase();
+
+    const existingStock = await StockModel.findOne({ 
+      symbol: normalizedSymbol, 
+    });
 
     if (existingStock) {
       return res.status(409).json({
@@ -31,12 +35,30 @@ const createStock = async (req, res) => {
       });
     }
 
+
+    const priceChange = currentPrice - previousClose;
+
+    const priceChangePercent =
+      previousClose > 0
+        ? (priceChange / previousClose) * 100
+        : 0;
+
     const stock = await StockModel.create({
-      symbol,
+      symbol: normalizedSymbol,
       companyName,
+      exchange,
       currentPrice,
       previousClose,
-      exchange,
+
+      openPrice: currentPrice,
+      dayHigh: currentPrice,
+      dayLow: currentPrice,
+
+      change: Number(priceChange.toFixed(2)),
+      changePercent: Number(priceChangePercent.toFixed(2)),
+
+      volume: 0,
+      lastPriceUpdate: new Date(),
     });
 
     return res.status(201).json({

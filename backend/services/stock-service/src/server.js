@@ -1,3 +1,7 @@
+const http = require("http");
+const { Server } = require("socket.io");
+
+const RealtimeService = require("./services/RealtimeService");
 require("dotenv").config();
 
 const express = require("express");
@@ -5,6 +9,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const connectDB = require("./config/db");
+const MarketSimulationService = require("./services/MarketSimulationService");
 
 const stockRoutes = require("./routes/StockRoute");
 
@@ -28,6 +33,28 @@ app.get("/health", (req, res) => {
 
 const PORT = process.env.PORT || 3004;
 
-app.listen(PORT, () => {
-  console.log(`Stock Service running on port ${PORT}`);
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
 });
+
+
+RealtimeService.initialize(io);
+
+io.on("connection", (socket) => {
+  console.log(`Client Connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`Client Disconnected: ${socket.id}`);
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Stock Service running on port ${PORT}`);
+
+  MarketSimulationService.start();
+});
+

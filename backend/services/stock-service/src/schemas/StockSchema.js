@@ -8,12 +8,19 @@ const StockSchema = new mongoose.Schema(
       unique: true,
       uppercase: true,
       trim: true,
+      index: true,
     },
 
     companyName: {
       type: String,
       required: true,
       trim: true,
+    },
+
+    exchange: {
+      type: String,
+      enum: ["NSE", "BSE"],
+      default: "NSE",
     },
 
     currentPrice: {
@@ -28,10 +35,40 @@ const StockSchema = new mongoose.Schema(
       min: 0,
     },
 
-    exchange: {
-      type: String,
-      enum: ["NSE", "BSE"],
-      default: "NSE",
+    openPrice: {
+      type: Number,
+      min: 0,
+    },
+
+    dayHigh: {
+      type: Number,
+      min: 0,
+    },
+
+    dayLow: {
+      type: Number,
+      min: 0,
+    },
+
+    change: {
+      type: Number,
+      default: 0,
+    },
+
+    changePercent: {
+      type: Number,
+      default: 0,
+    },
+
+    volume: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    lastPriceUpdate: {
+      type: Date,
+      default: Date.now,
     },
 
     isActive: {
