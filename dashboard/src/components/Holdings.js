@@ -3,17 +3,23 @@ import React, {useState, useEffect} from "react";
 import axios from "axios";
 
 import VerticalGraph from "./VerticalGraph";
+import { useMarket } from "../context/MarketContext";
 
 
 const Holdings = () => {
 
   const [allHoldings, setAllHoldings] = useState([]);
+  const { stocks } = useMarket();
 
   useEffect(() => {
     axios.get("http://localhost:3002/allHoldings").then((res) => {
       setAllHoldings(res.data); 
     })
   }, [])
+
+  const getLiveStock = (symbol) => {
+    return stocks.find((stock) => stock.symbol === symbol);
+  };
 
 
   const labels = allHoldings.map((subarray) => subarray["name"]);
@@ -63,21 +69,29 @@ const Holdings = () => {
             <th>Day chg.</th>
           </tr>
           {allHoldings.map((stock, index) => {
-            const curValue = stock.price * stock.qty;
+            const liveStock = getLiveStock(stock.name);
+
+            const currentPrice = liveStock?.currentPrice ?? stock.price;
+
+            const curValue = currentPrice * stock.qty;
             const isProfit = curValue - stock.avg * stock.qty > 0.0;
             const profClass = isProfit? "profit": "loss";
-            const dayClass = stock.isLoss ? "loss": "profit";
+            const dayClass = (liveStock?.change ?? 0) < 0 ? "loss" : "profit";
 
             return (
               <tr key={index}>
                 <td>{stock.name}</td>
                 <td>{stock.qty}</td>
                 <td>{stock.avg.toFixed(2)}</td>
-                <td>{stock.price.toFixed(2)}</td>
+                <td>{Number(currentPrice).toFixed(2)}</td>
                 <td>{curValue.toFixed(2)}</td>
                 <td className = {profClass}>{(curValue - stock.avg * stock.qty).toFixed(2)}</td>
                 <td className = {profClass}>{stock.net}</td>
-                <td className = {dayClass}>{stock.day}</td>
+                <td className={dayClass}>
+                  {liveStock
+                    ? `${Number(liveStock.changePercent).toFixed(2)}%`
+                    : stock.day}
+                </td>
               </tr>
             )
           })}

@@ -1,22 +1,29 @@
+import { useMarket } from "../context/MarketContext";
 import React, { useState, useContext } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import Grow from "@mui/material/Grow";
-import { watchlist } from "../data/data";
 import {BarChartOutlined, KeyboardArrowDown, KeyboardArrowUp, MoreHoriz} from "@mui/icons-material";
 import GeneralContext from "./GeneralContext"; 
-import axios from "axios";
 import DoughnutChart from "./DoughnutChart";
 
 const WatchList = () => {
 
+  const {
+    stocks,
+    loading,
+    error,
+    isConnected,
+  } = useMarket();
 
-  const labels = watchlist.map((subarray) => subarray["name"]);
+
+
+  const labels = stocks.map((stock) => stock.symbol);
   const data = {
     labels,
     datasets: [
       {
         label: 'Price',
-        data: watchlist.map((stock) => stock.price),
+        data: stocks.map((stock) => stock.currentPrice),
         backgroundColor: [
           'rgba(255, 99, 132, 0.5)',
           'rgba(54, 162, 235, 0.5)',
@@ -38,19 +45,36 @@ const WatchList = () => {
     ],
   }
 
+  if (loading) {
+    return (
+      <div className="watchlist-container">
+        <p>Loading market data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="watchlist-container">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
       <div className= "watchlist-container">
         <div className="search-container">
           <input type="text" placeholder= "Search eg:infy, bse, nifty, fut weekly, gold mcx" className = "search" name="search" id="search" />
-          <span className="counts"> {watchlist.length} / 50</span>
+          <span className="counts"> {stocks.length} / 50</span>
+          <span className={isConnected ? "up" : "down"}>
+            {isConnected ? "● Live" : "● Reconnecting"}
+          </span>
         </div>
 
         <ul className="list">
-          {watchlist.map((stock, index) => {
-            return(
-              <WatchlistItem stock={stock} key={index} />
-            )
-          })}
+          {stocks.map((stock, index) => (
+            <WatchlistItem stock={stock} key={stock.symbol || index} />
+          ))}
         </ul>
 
         <DoughnutChart data = {data} />
@@ -74,14 +98,27 @@ const WatchlistItem = ({stock}) => {
   return(
     <li onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <div className="item">
-        <p className={stock.isDown ? "down" : "up"}>{stock.name}</p>
+        <p className={stock.change < 0 ? "down" : "up"}>
+          {stock.symbol}
+        </p>
+
         <div className="itemInfo">
-          <span className="percent">{stock.percent}</span>
-          {stock.isDown ? (<KeyboardArrowDown className="down"/>) : (<KeyboardArrowUp className="up"/>)}
-          <span className="price">{stock.price}</span>
+          <span className="percent">
+            {Number(stock.changePercent).toFixed(2)}%
+          </span>
+
+          {stock.change < 0 ? (
+            <KeyboardArrowDown className="down" />
+          ) : (
+            <KeyboardArrowUp className="up" />
+          )}
+
+          <span className="price">
+            {Number(stock.currentPrice).toFixed(2)}
+          </span>
         </div>
       </div>
-      {showWatchlistActions && <WatchListActions uid={stock.name}/>}
+      {showWatchlistActions && <WatchListActions uid={stock.symbol}/>}
     </li>
   )
 }
