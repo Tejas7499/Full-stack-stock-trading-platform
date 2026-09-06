@@ -1,7 +1,6 @@
-console.log("Portfolio Target:", process.env.PORTFOLIO_SERVICE);
-
 const {
   createProxyMiddleware,
+  fixRequestBody,
 } = require("http-proxy-middleware");
 
 module.exports = function (app) {
@@ -18,6 +17,9 @@ module.exports = function (app) {
       target: process.env.AUTH_SERVICE,
       changeOrigin: true,
       pathFilter: "/api/auth",
+      on: {
+        proxyReq: fixRequestBody,
+      },
     })
   );
 
@@ -26,6 +28,9 @@ module.exports = function (app) {
       target: process.env.PORTFOLIO_SERVICE,
       changeOrigin: true,
       pathFilter: "/api/portfolio",
+      on: {
+        proxyReq: fixRequestBody,
+      },
     })
   );
 
@@ -34,6 +39,9 @@ module.exports = function (app) {
       target: process.env.ORDER_SERVICE,
       changeOrigin: true,
       pathFilter: "/api/orders",
+      on: {
+        proxyReq: fixRequestBody,
+      },
     })
   );
 
@@ -42,6 +50,9 @@ module.exports = function (app) {
       target: process.env.STOCK_SERVICE,
       changeOrigin: true,
       pathFilter: "/api/stocks",
+      on: {
+        proxyReq: fixRequestBody,
+      },
     })
   );
 };

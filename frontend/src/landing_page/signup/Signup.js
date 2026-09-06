@@ -22,11 +22,13 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log("SIGNUP BUTTON CLICKED");
+    console.log("Form data:", inputValue);
+
     try {
       const { data } = await axios.post(
-        "http://localhost:3002/signup",
+        "http://localhost:8080/api/auth/signup",
         inputValue,
-        { withCredentials: true }
       );
 
       console.log(data);
@@ -36,9 +38,14 @@ const Signup = () => {
       } else {
         alert(data.message);
       }
-    } catch (err) {
-      console.log(err);
-      alert("Something went wrong");
+    } catch (error) {
+      console.error("Signup Error:", error);
+      console.error("Backend Response:", error.response?.data);
+
+      alert(
+        error.response?.data?.message ||
+        "Something went wrong"
+      );
     }
   };
 

@@ -14,19 +14,26 @@ const Login = () => {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:3002/login",
-        inputValue,
-        { withCredentials: true }
+        "http://localhost:8080/api/auth/login",
+        inputValue, 
       );
 
       if (data.success) {
-        window.location.href = "http://localhost:3001";
+        localStorage.setItem("token", data.token); 
+        window.location.href = "http://localhost:3005";
+      }else {
+        alert(data.message || "Invalid email or password");
       }
     } catch (error) {
-      console.log(error);
+      console.error("Login Error:", error);
+      console.error("Backend Response:", error.response?.data);
+
+      alert(
+        error.response?.data?.message ||
+        "Invalid email or password"
+      );
     }
   };
-
   return (
     <div className="login-container">
       <div className="login-box">

@@ -12,9 +12,12 @@ const Holdings = () => {
   const { stocks } = useMarket();
 
   useEffect(() => {
-    axios.get("http://localhost:3002/allHoldings").then((res) => {
+    axios.get("http://localhost:8080/api/portfolio/holdings").then((res) => {
       setAllHoldings(res.data); 
     })
+    .catch((err) => {
+      console.error("Error fetching holdings:", err)
+    });
   }, [])
 
   const getLiveStock = (symbol) => {

@@ -9,9 +9,12 @@ const Positions = () => {
   const [allPositions, setAllPositions] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:3002/allPositions").then((res) => {
+    axios.get("http://localhost:8080/api/portfolio/positions").then((res) => {
       setAllPositions(res.data);
     })
+    .catch((err) => {
+      console.error("error fetching positions:", err);
+    });
   }, [])
 
   return (
