@@ -25,14 +25,12 @@ jobs:
 
   # --- Phase 2: Continuous Deployment (CD) ---
   deploy-to-ec2:
-    needs: build-and-validate # Ensures deployment only happens if the build passes
+    needs: build-and-validate
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' # Only deploy when pushing to main
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Execute Remote SSH Commands to Deploy
         uses: appleboy/ssh-action@master
-        # This step will be skipped/fail gracefully until EC2 secrets are added
-        continue-on-error: true 
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
@@ -41,10 +39,10 @@ jobs:
             cd Full-stack-stock-trading-platform
             git pull origin main
             
-            # Safely inject secrets into the EC2 environment
+            # Inject secrets into the EC2 environment
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
             
-            # Deploy using the designated microservices compose file
+            # Deploy using Docker Compose
             docker compose -f docker-compose.microservices.yml up -d --build
             docker system prune -f
