@@ -21,7 +21,7 @@ jobs:
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
 
       - name: Verify Docker Compose Build
-        run: docker-compose -f docker-compose.microservices.yml build
+        run: docker compose -f docker-compose.microservices.yml build
 
   # --- Phase 2: Continuous Deployment (CD) ---
   deploy-to-ec2:
@@ -46,5 +46,5 @@ jobs:
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
             
             # Deploy using the designated microservices compose file
-            docker-compose -f docker-compose.microservices.yml up -d --build
+            docker compose -f docker-compose.microservices.yml up -d --build
             docker system prune -f
