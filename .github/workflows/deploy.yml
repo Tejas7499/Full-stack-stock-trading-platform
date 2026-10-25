@@ -14,8 +14,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Create temporary .env for Docker Compose
+        # This securely passes your GitHub secrets into the build environment
+        run: |
+          echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
       - name: Verify Docker Compose Build
-        # This confirms your microservices can build successfully without syntax errors
         run: docker-compose -f docker-compose.microservices.yml build
 
   # --- Phase 2: Continuous Deployment (CD) ---
