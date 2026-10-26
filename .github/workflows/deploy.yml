@@ -36,6 +36,11 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Clone repo if it doesn't exist yet, otherwise pull latest changes
+            if [ ! -d "Full-stack-stock-trading-platform" ]; then
+              git clone https://github.com/Tejas7499/Full-stack-stock-trading-platform.git
+            fi
+            
             cd Full-stack-stock-trading-platform
             git pull origin main
             
@@ -43,6 +48,6 @@ jobs:
             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > .env
             echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
             
-            # Deploy using Docker Compose
+            # Deploy using Docker Compose V2
             docker compose -f docker-compose.microservices.yml up -d --build
             docker system prune -f
